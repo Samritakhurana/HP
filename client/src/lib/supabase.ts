@@ -1,80 +1,38 @@
-import { createClient } from '@supabase/supabase-js';
+// This file has been migrated to client/src/lib/auth.ts
+// All Supabase authentication functionality has been replaced with custom authentication
+// that works with the new Neon PostgreSQL database and Drizzle ORM
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://voobuquyzgsbkpucfuwx.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvb2J1cXV5emdzYmtwdWNmdXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MTMzMDgsImV4cCI6MjA2Nzk4OTMwOH0.t9uTepW-SxFAixV-L3BkXG2VgRAr-9NpsTj70so5ux4';
+export { signIn, signUp, signOut, getCurrentUser } from './auth';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Legacy export for backward compatibility
+export const supabase = {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
+    signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+      const result = await signIn(email, password);
+      return { data: result.data, error: result.error };
     },
-  },
-});
-
-// Test connection on initialization
-supabase.from('users').select('count', { count: 'exact', head: true }).then(
-  ({ error }) => {
-    if (error) {
-      console.error('Supabase connection test failed:', error);
-    } else {
-      console.log('Supabase connection successful');
-    }
-  }
-);
-
-export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  return { data, error };
-};
-
-export const signUp = async (email: string, password: string, fullName: string, role: 'admin' | 'employee' = 'employee') => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        role,
-      },
+    signUp: async ({ email, password, options }: { email: string; password: string; options?: any }) => {
+      const fullName = options?.data?.full_name || '';
+      const role = options?.data?.role || 'employee';
+      const result = await signUp(email, password, fullName, role);
+      return { data: result.data, error: result.error };
     },
-  });
-  
-  // If signup successful, create user profile
-  if (data.user && !error) {
-    const { error: profileError } = await supabase
-      .from('users')
-      .insert({
-        id: data.user.id,
-        email: data.user.email!,
-        full_name: fullName,
-        role,
-      });
-    
-    if (profileError) {
-      console.error('Error creating user profile:', profileError);
+    signOut: async () => {
+      const result = await signOut();
+      return { error: result.error };
+    },
+    getUser: async () => {
+      const user = await getCurrentUser();
+      return { data: { user }, error: null };
     }
-  }
-  
-  return { data, error };
+  },
+  from: () => ({
+    select: () => ({
+      order: () => ({
+        then: () => Promise.resolve({ data: [], error: null })
+      })
+    })
+  })
 };
 
-export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  return { error };
-};
-
-export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
-};
+export * from './auth';
