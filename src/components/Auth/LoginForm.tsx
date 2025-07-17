@@ -231,15 +231,6 @@ const LoginForm: React.FC = () => {
         </div>
 
         {/* Demo Credentials - Only show on sign in */}
-        {!isSignUp && (
-          <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Demo Credentials:</h3>
-            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              <p><strong>Admin:</strong> admin@hpworld.com / admin123</p>
-              <p><strong>Employee:</strong> employee@hpworld.com / emp123</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
