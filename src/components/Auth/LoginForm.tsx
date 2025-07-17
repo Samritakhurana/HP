@@ -93,7 +93,7 @@ const LoginForm: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsSignUp(true)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
+            className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-colors duration-200 ${
               isSignUp
                 ? 'bg-white dark:bg-gray-600 text-hp-blue dark:text-white shadow-sm'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
