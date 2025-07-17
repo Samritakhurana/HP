@@ -64,7 +64,7 @@ const LoginForm: React.FC = () => {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-hp-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">C-D</span>
+            <span className="text-white font-bold text-2xl">CD</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             C-Destination Management Portal
