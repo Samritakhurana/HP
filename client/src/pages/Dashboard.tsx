@@ -2,18 +2,32 @@ import React from 'react';
 import { Users, Clock, Package, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
 import StatsCard from '../components/Dashboard/StatsCard';
 import RecentActivity from '../components/Dashboard/RecentActivity';
-import { useAuthUser } from '../hooks/useAuth';
-import { useAttendance } from '../hooks/useAttendance';
-import { useProducts } from '../hooks/useProducts';
-import { useOrders } from '../hooks/useOrders';
-import { useUsers } from '../hooks/useUsers';
+import { useAuth } from '../contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 
 const Dashboard: React.FC = () => {
-  const { attendance } = useAttendance();
-  const { products } = useProducts();
-  const { orders } = useOrders();
-  const { users } = useUsers();
-  const { user } = useAuthUser();
+  const { user } = useAuth();
+  
+  // Use react-query for data fetching
+  const { data: attendance = [] } = useQuery({
+    queryKey: ['/api/attendance'],
+    enabled: !!user,
+  });
+  
+  const { data: products = [] } = useQuery({
+    queryKey: ['/api/products'],
+    enabled: !!user,
+  });
+  
+  const { data: orders = [] } = useQuery({
+    queryKey: ['/api/orders'],
+    enabled: !!user,
+  });
+  
+  const { data: users = [] } = useQuery({
+    queryKey: ['/api/users'],
+    enabled: !!user && user.role === 'admin',
+  });
 
   // Calculate today's stats
   const today = new Date().toISOString().split('T')[0];

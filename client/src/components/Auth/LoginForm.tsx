@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { signUp } from "../../lib/supabase";
+import { signUp } from "../../lib/auth";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 
 const LoginForm: React.FC = () => {

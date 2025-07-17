@@ -1,5 +1,5 @@
-import React from 'react';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Router, Route, Switch } from 'wouter';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout/Layout';
@@ -18,6 +18,18 @@ import Search from './pages/Search';
 import Employees from './pages/Employees';
 import ExportData from './pages/ExportData';
 
+// Create QueryClient
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - updated from cacheTime
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 // Protected Route Component
 const ProtectedRoute: React.FC = () => {
   const { user, loading } = useAuth();
@@ -30,11 +42,16 @@ const ProtectedRoute: React.FC = () => {
     );
   }
 
-  return user ? <Layout /> : <Navigate to="/login" />;
+  if (!user) {
+    window.location.href = "/login";
+    return null;
+  }
+
+  return <Layout />;
 };
 
-// Login Route Component
-const LoginRoute: React.FC = () => {
+// App routing component
+const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -45,86 +62,68 @@ const LoginRoute: React.FC = () => {
     );
   }
 
-  return user ? <Navigate to="/dashboard" /> : <LoginForm />;
+  return (
+    <Switch>
+      <Route path="/login">
+        {user ? (() => { window.location.href = "/dashboard"; return null; })() : <LoginForm />}
+      </Route>
+      <Route path="/">
+        {user ? (() => { window.location.href = "/dashboard"; return null; })() : <LoginForm />}
+      </Route>
+      <Route path="/dashboard">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/attendance">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/inventory">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/activity">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/search">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/employees">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/export">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/payroll">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/orders">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/tasks">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/messages">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/invoices">
+        <ProtectedRoute />
+      </Route>
+      <Route path="/analytics">
+        <ProtectedRoute />
+      </Route>
+    </Switch>
+  );
 };
-
-// Create the router
-const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginRoute />
-  },
-  {
-    path: "/",
-    element: <ProtectedRoute />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" />
-      },
-      {
-        path: "dashboard",
-        element: <Dashboard />
-      },
-      {
-        path: "attendance",
-        element: <Attendance />
-      },
-      {
-        path: "inventory",
-        element: <Inventory />
-      },
-      {
-        path: "activity",
-        element: <ActivityLog />
-      },
-      {
-        path: "search",
-        element: <Search />
-      },
-      {
-        path: "employees",
-        element: <Employees />
-      },
-      {
-        path: "export",
-        element: <ExportData />
-      },
-      {
-        path: "payroll",
-        element: <Payroll />
-      },
-      {
-        path: "orders",
-        element: <Orders />
-      },
-      {
-        path: "tasks",
-        element: <Tasks />
-      },
-      {
-        path: "messages",
-        element: <Messages />
-      },
-      {
-        path: "invoices",
-        element: <Invoices />
-      },
-      {
-        path: "analytics",
-        element: <Analytics />
-      }
-    ]
-  }
-]);
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
