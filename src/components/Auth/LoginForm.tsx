@@ -63,7 +63,6 @@ const LoginForm: React.FC = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center px-4"
       style={{ backgroundImage: "url('/hphoto.jpg')" }}
     >
-      // <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
       <div className="w-full max-w-md bg-white/80 p-8 rounded-xl shadow-lg backdrop-blur">
         {/* Logo and Header */}
         <div className="text-center mb-8">
