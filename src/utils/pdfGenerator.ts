@@ -7,7 +7,7 @@ export const generateInvoicePDF = (invoice: Invoice) => {
   // Company Header
   doc.setFontSize(24);
   doc.setTextColor(0, 150, 214); // HP Blue
-  doc.text('HP World', 20, 30);
+  doc.text('C-Destination', 20, 30);
   
   doc.setFontSize(12);
   doc.setTextColor(100, 100, 100);
@@ -131,7 +131,7 @@ export const generateInvoicePDF = (invoice: Invoice) => {
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text('Thank you for your business!', 20, 280);
-  doc.text('HP World - Your Technology Partner', 20, 287);
+  doc.text('C-Destination makes distribution simple', 20, 287);
   
   // Save the PDF
   doc.save(`Invoice_${invoice.invoice_number}.pdf`);
