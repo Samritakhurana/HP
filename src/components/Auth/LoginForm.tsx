@@ -67,7 +67,7 @@ const LoginForm: React.FC = () => {
             <span className="text-white font-bold text-2xl">HP</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            HP World Portal
+            C-Destination Management Portal
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Retail & Distribution Management
