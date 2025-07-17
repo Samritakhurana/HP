@@ -114,7 +114,7 @@ export const generateInvoicePDF = (invoice: Invoice) => {
     doc.text(`Payment Method: ${invoice.payment_method}`, 20, paymentY + 10);
   }
   
-  doc.text('Bank Transfer: HP World Business Account', 20, paymentY + 20);
+  doc.text('Bank Transfer: C-Destination Business Account', 20, paymentY + 20);
   doc.text('UPI: hpworld@upi', 20, paymentY + 30);
   doc.text('Contact: support@hpworld.com', 20, paymentY + 40);
   
