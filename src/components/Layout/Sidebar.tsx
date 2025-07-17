@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <span className="text-white font-bold text-sm">HP</span>
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">
-                HP World
+                C-Destination
               </span>
             </div>
           </div>
