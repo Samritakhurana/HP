@@ -30,10 +30,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           
           <div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              HP World Management
+              C-Destination Management Portal
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Retail & Distribution Portal
+              Retail & Distribution Dashboard
             </p>
           </div>
         </div>
