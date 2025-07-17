@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link, useLocation } from 'wouter';
-import { useAuth } from '../../contexts/AuthContext';
+import { NavLink } from 'react-router-dom';
+import { useAuthUser } from '../../hooks/useAuth';
 import {
   LayoutDashboard,
   Clock,
@@ -39,8 +39,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
-  const [location] = useLocation();
+  const { user } = useAuthUser();
   
   // Filter navigation items based on user role
   const filteredNavigationItems = navigationItems.filter(item => {
@@ -81,24 +80,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {filteredNavigationItems.map((item) => {
-              const isActive = location === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+            {filteredNavigationItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     isActive
                       ? 'bg-hp-blue text-white'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                  onClick={() => window.innerWidth < 1024 && onClose()}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
-              );
-            })}
+                  }`
+                }
+                onClick={() => window.innerWidth < 1024 && onClose()}
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.name}
+              </NavLink>
+            ))}
           </nav>
         </div>
       </div>

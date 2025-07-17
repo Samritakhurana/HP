@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@shared/schema';
 import { signIn as authSignIn, signOut as authSignOut, getCurrentUser } from '../lib/auth';
 
