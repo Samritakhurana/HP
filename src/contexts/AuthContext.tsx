@@ -40,11 +40,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    // First, verify the user credentials without signing them in
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    return { data, error };
+    
+    if (error) {
+      return { data, error };
+    }
+    
+    // If credentials are valid, sign them out immediately and send OTP
+    await supabase.auth.signOut();
+    
+    // Send OTP to email
+    const { data: otpData, error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false, // Don't create user if they don't exist
+      },
+    });
+    
+    return { data: otpData, error: otpError };
   };
 
   const signOut = async () => {
