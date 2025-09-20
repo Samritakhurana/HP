@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { signUp, verifyOtp } from '../../lib/supabase';
+import { signUp } from '../../lib/supabase';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
 const LoginForm: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [showOtpVerification, setShowOtpVerification] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'admin' | 'employee'>('employee');
   const [showPassword, setShowPassword] = useState(false);
@@ -51,145 +48,16 @@ const LoginForm: React.FC = () => {
     setLoading(false);
   };
 
-  const handleOtpVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    const { error } = await verifyOtp(userEmail, otp);
-    
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess('Login successful!');
-      // The auth context will handle the redirect
-    }
-    
-    setLoading(false);
-  };
-
-  const handleResendOtp = async () => {
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    const { error } = await signIn(userEmail, password);
-    
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess('New OTP sent to your email.');
-    }
-    
-    setLoading(false);
-  };
-
-  const handleBackToLogin = () => {
-    setShowOtpVerification(false);
-    setOtp('');
-    setUserEmail('');
-    setError('');
-    setSuccess('');
-  };
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
-    setShowOtpVerification(false);
     setError('');
     setSuccess('');
     setEmail('');
     setPassword('');
-    setOtp('');
-    setUserEmail('');
     setFullName('');
     setRole('employee');
   };
 
-  // OTP Verification Form
-  if (showOtpVerification) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-cover bg-center px-4"
-        style={{ backgroundImage: "url('/hphoto.jpg')" }}
-      >
-        <div className="max-w-sm w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-          {/* Logo and Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-hp-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">CD</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Verify Your Email
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Enter the OTP sent to {userEmail}
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleOtpVerification} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg text-sm">
-                {success}
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Enter OTP
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  id="otp"
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-hp-blue focus:border-transparent dark:bg-gray-700 dark:text-white text-center text-lg tracking-widest"
-                  placeholder="000000"
-                  maxLength={6}
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-hp-blue hover:bg-hp-dark-blue text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Verifying...' : 'Verify OTP'}
-            </button>
-          </form>
-
-          {/* Actions */}
-          <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={loading}
-              className="w-full text-sm text-hp-blue hover:text-hp-dark-blue font-medium disabled:opacity-50"
-            >
-              Resend OTP
-            </button>
-            <button
-              type="button"
-              onClick={handleBackToLogin}
-              className="w-full text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
-            >
-              Back to Login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center px-4"
