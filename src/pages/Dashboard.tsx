@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Clock, Package, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Users, Clock, Package, DollarSign, AlertTriangle, TrendingUp, CheckSquare } from 'lucide-react';
 import StatsCard from '../components/Dashboard/StatsCard';
 import RecentActivity from '../components/Dashboard/RecentActivity';
 import { useAuthUser } from '../hooks/useAuth';
@@ -7,12 +7,14 @@ import { useAttendance } from '../hooks/useAttendance';
 import { useProducts } from '../hooks/useProducts';
 import { useOrders } from '../hooks/useOrders';
 import { useUsers } from '../hooks/useUsers';
+import { useTasks } from '../hooks/useTasks';
 
 const Dashboard: React.FC = () => {
   const { attendance } = useAttendance();
   const { products } = useProducts();
   const { orders } = useOrders();
   const { users } = useUsers();
+  const { tasks } = useTasks();
   const { user } = useAuthUser();
 
   // Calculate today's stats
@@ -22,13 +24,17 @@ const Dashboard: React.FC = () => {
     return recordDate === today;
   });
 
-  const presentToday = todayAttendance.filter(record => 
+  const presentToday = todayAttendance.filter(record =>
     record.status === 'present' || record.status === 'late'
   ).length;
 
   const totalEmployees = users.length;
 
-  const lowStockItems = products.filter(product => 
+  const pendingTasks = tasks.filter(task =>
+    task.status === 'not_started' || task.status === 'in_progress'
+  ).length;
+
+  const lowStockItems = products.filter(product =>
     product.quantity <= (product.low_stock_threshold || 5)
   ).length;
 
@@ -46,11 +52,10 @@ const Dashboard: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
-          title="Total Employees"
-          value={totalEmployees.toString()}
-          icon={Users}
+          title="Pending Tasks"
+          value={pendingTasks.toString()}
+          icon={CheckSquare}
           color="blue"
-          trend={{ value: 0, isPositive: true }}
         />
         <StatsCard
           title="Today's Attendance"
