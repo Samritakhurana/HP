@@ -231,7 +231,7 @@ const Payroll: React.FC = () => {
                   Period
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Base Salary
+                  Salary
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Bonus
@@ -374,7 +374,7 @@ const Payroll: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Base Salary (₹)
+                    Salary (₹)
                   </label>
                   <input
                     name="baseSalary"
