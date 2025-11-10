@@ -366,7 +366,7 @@ const Payroll: React.FC = () => {
                       type="number"
                       required
                       min="2020"
-                      max="2030"
+                      max="2070"
                       defaultValue={new Date().getFullYear()}
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"
                     />
@@ -381,7 +381,7 @@ const Payroll: React.FC = () => {
                     type="number"
                     required
                     min="0"
-                    step="0.01"
+                    step="1000"
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
@@ -393,7 +393,7 @@ const Payroll: React.FC = () => {
                     name="bonus"
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="1000"
                     defaultValue="0"
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"
                   />
