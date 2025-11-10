@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DollarSign, Plus, Search, Filter, Calendar, User, TrendingUp } from 'lucide-react';
+import { DollarSign, Plus, Search, Calendar, User, TrendingUp } from 'lucide-react';
 import { useAuthUser } from '../hooks/useAuth';
 import { usePayroll } from '../hooks/usePayroll';
 import { useUsers } from '../hooks/useUsers';
 import { format } from 'date-fns';
 
 const Payroll: React.FC = () => {
-  const { user } = useAuthUser();
+  const { user, loading: userLoading } = useAuthUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
@@ -33,7 +33,16 @@ const Payroll: React.FC = () => {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loadMore]);
 
-  // Redirect non-admin users (after all hooks)
+  // Show loading while checking user role
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-hp-blue"></div>
+      </div>
+    );
+  }
+
+  // Redirect non-admin users (after loading is complete)
   if (user?.role !== 'admin') {
     return (
       <div className="flex items-center justify-center h-64">
