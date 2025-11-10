@@ -43,8 +43,12 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-hp-blue to-blue-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: "url('/lap.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative z-10">
         <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
           {isSignUp ? "Create Account" : "Welcome Back"}
         </h1>
