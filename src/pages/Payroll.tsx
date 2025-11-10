@@ -1,19 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { DollarSign, Plus, Search, Calendar, User, TrendingUp } from 'lucide-react';
-import { useAuthUser } from '../hooks/useAuth';
-import { usePayroll } from '../hooks/usePayroll';
-import { useUsers } from '../hooks/useUsers';
-import { format } from 'date-fns';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  DollarSign,
+  Plus,
+  Search,
+  Calendar,
+  User,
+  TrendingUp,
+} from "lucide-react";
+import { useAuthUser } from "../hooks/useAuth";
+import { usePayroll } from "../hooks/usePayroll";
+import { useUsers } from "../hooks/useUsers";
+import { format } from "date-fns";
 
 const Payroll: React.FC = () => {
   const { user, loading: userLoading } = useAuthUser();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState('all');
-  const [selectedYear, setSelectedYear] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
   const [showAddForm, setShowAddForm] = useState(false);
-  const { payroll, loading, loadingMore, hasMore, loadMore, addPayroll } = usePayroll();
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false);
+  const { payroll, loading, loadingMore, hasMore, loadMore, addPayroll } =
+    usePayroll();
   const { users } = useUsers();
   const observerRef = useRef<HTMLDivElement>(null);
+
+  // Minimum loading time of 1 second
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoadingComplete(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Infinite scroll implementation
   useEffect(() => {
@@ -33,8 +51,8 @@ const Payroll: React.FC = () => {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loadMore]);
 
-  // Show loading while checking user role
-  if (userLoading) {
+  // Show loading while checking user role (minimum 1 second)
+  if (userLoading || !minLoadingComplete) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-hp-blue"></div>
@@ -43,14 +61,16 @@ const Payroll: React.FC = () => {
   }
 
   // Redirect non-admin users (after loading is complete)
-  if (user?.role !== 'admin') {
+  if (user?.role !== "admin") {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <DollarSign className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Access Restricted</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Access Restricted
+          </h2>
           <p className="text-gray-600 dark:text-gray-400">
             Only administrators can access payroll management.
           </p>
@@ -60,39 +80,62 @@ const Payroll: React.FC = () => {
   }
 
   const filteredPayroll = payroll.filter((record) => {
-    const matchesSearch = record.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         record.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesMonth = selectedMonth === 'all' || record.month === selectedMonth;
-    const matchesYear = selectedYear === 'all' || record.year.toString() === selectedYear;
+    const matchesSearch =
+      record.user?.full_name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      record.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesMonth =
+      selectedMonth === "all" || record.month === selectedMonth;
+    const matchesYear =
+      selectedYear === "all" || record.year.toString() === selectedYear;
     return matchesSearch && matchesMonth && matchesYear;
   });
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
-  const years = Array.from(new Set(payroll.map(p => p.year))).sort((a, b) => b - a);
+  const years = Array.from(new Set(payroll.map((p) => p.year))).sort(
+    (a, b) => b - a
+  );
 
-  const totalPayroll = payroll.reduce((sum, record) => sum + record.total_salary, 0);
-  const currentMonthPayroll = payroll.filter(record => {
+  const totalPayroll = payroll.reduce(
+    (sum, record) => sum + record.total_salary,
+    0
+  );
+  const currentMonthPayroll = payroll.filter((record) => {
     const now = new Date();
-    return record.month === months[now.getMonth()] && record.year === now.getFullYear();
+    return (
+      record.month === months[now.getMonth()] &&
+      record.year === now.getFullYear()
+    );
   });
 
   const handleAddPayroll = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget as HTMLFormElement);
-    
-    const baseSalary = parseFloat(formData.get('baseSalary') as string);
-    const bonus = parseFloat(formData.get('bonus') as string) || 0;
-    const daysWorked = parseInt(formData.get('daysWorked') as string);
-    const totalDays = parseInt(formData.get('totalDays') as string);
-    
+
+    const baseSalary = parseFloat(formData.get("baseSalary") as string);
+    const bonus = parseFloat(formData.get("bonus") as string) || 0;
+    const daysWorked = parseInt(formData.get("daysWorked") as string);
+    const totalDays = parseInt(formData.get("totalDays") as string);
+
     const payrollData = {
-      user_id: formData.get('userId') as string,
-      month: formData.get('month') as string,
-      year: parseInt(formData.get('year') as string),
+      user_id: formData.get("userId") as string,
+      month: formData.get("month") as string,
+      year: parseInt(formData.get("year") as string),
       base_salary: baseSalary,
       bonus: bonus,
       total_salary: baseSalary + bonus,
@@ -103,9 +146,9 @@ const Payroll: React.FC = () => {
     const result = await addPayroll(payrollData);
     if (result.success) {
       setShowAddForm(false);
-      alert('Payroll record created successfully!');
+      alert("Payroll record created successfully!");
     } else {
-      alert(result.error || 'Failed to create payroll record');
+      alert(result.error || "Failed to create payroll record");
     }
   };
 
@@ -122,8 +165,12 @@ const Payroll: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Payroll Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage employee salaries and payments</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Payroll Management
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Manage employee salaries and payments
+          </p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -139,43 +186,59 @@ const Payroll: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Payroll</p>
-              <p className="text-2xl font-bold text-hp-blue">₹{totalPayroll.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Total Payroll
+              </p>
+              <p className="text-2xl font-bold text-hp-blue">
+                ₹{totalPayroll.toLocaleString()}
+              </p>
             </div>
             <DollarSign className="w-8 h-8 text-hp-blue" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">This Month</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                This Month
+              </p>
               <p className="text-2xl font-bold text-green-600">
-                ₹{currentMonthPayroll.reduce((sum, record) => sum + record.total_salary, 0).toLocaleString()}
+                ₹
+                {currentMonthPayroll
+                  .reduce((sum, record) => sum + record.total_salary, 0)
+                  .toLocaleString()}
               </p>
             </div>
             <Calendar className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Employees Paid</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Employees Paid
+              </p>
               <p className="text-2xl font-bold text-purple-600">
-                {new Set(payroll.map(p => p.user_id)).size}
+                {new Set(payroll.map((p) => p.user_id)).size}
               </p>
             </div>
             <User className="w-8 h-8 text-purple-600" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Salary</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Avg Salary
+              </p>
               <p className="text-2xl font-bold text-orange-600">
-                ₹{payroll.length > 0 ? Math.round(totalPayroll / payroll.length).toLocaleString() : '0'}
+                ₹
+                {payroll.length > 0
+                  ? Math.round(totalPayroll / payroll.length).toLocaleString()
+                  : "0"}
               </p>
             </div>
             <TrendingUp className="w-8 h-8 text-orange-600" />
@@ -258,20 +321,23 @@ const Payroll: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredPayroll.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr
+                  key={record.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-hp-blue rounded-full flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
-                          {record.user?.full_name?.charAt(0) || 'U'}
+                          {record.user?.full_name?.charAt(0) || "U"}
                         </span>
                       </div>
                       <div className="ml-3">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {record.user?.full_name || 'Unknown User'}
+                          {record.user?.full_name || "Unknown User"}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {record.user?.email || 'No email'}
+                          {record.user?.email || "No email"}
                         </div>
                       </div>
                     </div>
@@ -292,35 +358,41 @@ const Payroll: React.FC = () => {
                     {record.days_worked}/{record.total_days}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                    {format(new Date(record.created_at), 'MMM dd, yyyy')}
+                    {format(new Date(record.created_at), "MMM dd, yyyy")}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        
+
         {/* Loading indicator */}
         {loadingMore && (
           <div className="flex items-center justify-center py-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-hp-blue"></div>
-            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading more...</span>
+            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+              Loading more...
+            </span>
           </div>
         )}
-        
+
         {/* Intersection observer target */}
         <div ref={observerRef} className="h-1" />
-        
+
         {!hasMore && payroll.length > 0 && (
           <div className="text-center py-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">No more records to load</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              No more records to load
+            </p>
           </div>
         )}
-        
+
         {filteredPayroll.length === 0 && (
           <div className="text-center py-8">
             <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">No payroll records found</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              No payroll records found
+            </p>
           </div>
         )}
       </div>
@@ -329,7 +401,9 @@ const Payroll: React.FC = () => {
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Process Payroll</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Process Payroll
+            </h3>
             <form onSubmit={handleAddPayroll}>
               <div className="space-y-4">
                 <div>
