@@ -520,7 +520,7 @@ const Invoices: React.FC = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1000"
                           required
                           value={item.unit_price}
                           onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
