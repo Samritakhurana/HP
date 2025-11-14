@@ -3,9 +3,11 @@
 ## 🔍 What Was Fixed
 
 ### **The Problem**
+
 The `product_id` was not being passed from the invoice form to the backend, so the system couldn't identify which products to deduct from inventory.
 
 ### **The Solution**
+
 1. ✅ Added `product_id` to the invoice items when submitting the form
 2. ✅ Added validation to ensure products are selected before submission
 3. ✅ Added console logging for debugging
@@ -16,12 +18,14 @@ The `product_id` was not being passed from the invoice form to the backend, so t
 ## 🧪 Step-by-Step Testing Instructions
 
 ### **Step 1: Open Browser Console**
+
 1. Open your app in the browser
 2. Press `F12` or right-click → "Inspect"
 3. Go to the "Console" tab
 4. Keep this open during testing to see logs
 
 ### **Step 2: Check Your Current Inventory**
+
 1. Navigate to **Inventory** page
 2. Note down a product (e.g., "HP Laptop") and its quantity
 3. Example:
@@ -37,21 +41,26 @@ The `product_id` was not being passed from the invoice form to the backend, so t
 2. Click **"Create Invoice"** button
 
 3. **Fill Customer Information:**
+
    - Customer Name: Test Customer
    - Email: test@example.com
    - Due Date: Select any future date
 
 4. **Select Product:**
+
    - In the "Product" dropdown, select the product you noted earlier
    - The price should auto-fill
    - You should see: `HP Laptop - ₹45,000 (Stock: 50)`
 
 5. **Enter Quantity:**
+
    - Enter: `5`
    - Make sure it's less than available stock
 
 6. **Check Browser Console:**
+
    - You should see logs like:
+
    ```
    Creating invoice with data: {...}
    Checking inventory for product_id: xxx-xxx-xxx
@@ -89,27 +98,32 @@ The `product_id` was not being passed from the invoice form to the backend, so t
 ## ✅ Test Scenarios
 
 ### **Test 1: Normal Sale (Should Work)**
+
 - Product: Any product with stock > 5
 - Quantity to sell: 5
 - **Expected:** ✅ Invoice created, inventory reduced by 5
 
 ### **Test 2: Insufficient Stock (Should Show Error)**
+
 - Product: Any product with stock = 3
 - Quantity to sell: 10
 - **Expected:** ❌ Error message: "Insufficient stock for Product. Available: 3, Requested: 10"
 - **Expected:** Inventory NOT changed
 
 ### **Test 3: No Product Selected (Should Show Error)**
+
 - Leave product dropdown as "Select a product"
 - Try to submit
 - **Expected:** ❌ Error: "Please select a product for all items"
 
 ### **Test 4: Multiple Products (Should Work)**
+
 - Add 3 different products to invoice
 - Submit
 - **Expected:** ✅ All 3 products' inventories are reduced
 
 ### **Test 5: Exact Stock Amount (Should Work)**
+
 - Product with stock = 10
 - Quantity to sell: 10
 - **Expected:** ✅ Invoice created, inventory reduced to 0
@@ -121,16 +135,19 @@ The `product_id` was not being passed from the invoice form to the backend, so t
 ### **If Inventory Is NOT Being Reduced:**
 
 1. **Check Browser Console for Errors**
+
    - Look for red error messages
    - Look for the console.log messages we added
    - Share any errors you see
 
 2. **Verify product_id is in console log**
+
    - When creating invoice, check console
    - Look for: `"product_id": "xxx-xxx-xxx"`
    - If it shows `"product_id": undefined`, the product wasn't selected properly
 
 3. **Check Database Permissions**
+
    - Make sure your Supabase RLS policies allow updating products table
    - Check if user is authenticated
 
@@ -158,6 +175,7 @@ The `product_id` was not being passed from the invoice form to the backend, so t
 ## 📊 What to Look For in Console
 
 ### **Successful Flow:**
+
 ```
 Creating invoice with data: { items: [{ product_id: "xxx", ... }] }
 Checking inventory for product_id: xxx-xxx-xxx
@@ -170,6 +188,7 @@ Updating HP Laptop: 50 - 5 = 45
 ```
 
 ### **Failed Flow (Insufficient Stock):**
+
 ```
 Creating invoice with data: { items: [{ product_id: "xxx", ... }] }
 Checking inventory for product_id: xxx-xxx-xxx
@@ -177,6 +196,7 @@ Error: Insufficient stock for HP Laptop. Available: 3, Requested: 5
 ```
 
 ### **Failed Flow (Missing product_id):**
+
 ```
 Creating invoice with data: { items: [{ product_id: undefined, ... }] }
 All inventory checks passed. Items to update: []
@@ -205,10 +225,12 @@ Your integration is working correctly if:
 Once you confirm everything works:
 
 1. **Remove Console Logs (Optional):**
+
    - The console.log statements are helpful for debugging
    - You can leave them or remove them later
 
 2. **Test in Production:**
+
    - Deploy to Netlify
    - Test with real data
    - Monitor for any issues
@@ -244,6 +266,7 @@ If something doesn't work, provide:
 5. **Any error messages** shown to user
 
 Example:
+
 ```
 Steps:
 1. Selected "HP Laptop" (Stock: 50)
