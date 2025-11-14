@@ -195,7 +195,7 @@ const Invoices: React.FC = () => {
           { product_id: "", description: "", quantity: 1, unit_price: 0 },
         ],
       });
-      
+
       // Show detailed success message with inventory updates
       const itemsSummary = formData.items
         .map((item) => {
@@ -206,12 +206,12 @@ const Invoices: React.FC = () => {
         })
         .filter(Boolean)
         .join("\n");
-      
+
       alert(
         `✅ Invoice created successfully!\n\n` +
-        `Invoice Number: ${invoiceNumber}\n\n` +
-        `Inventory Updated:\n${itemsSummary}\n\n` +
-        `Please check the Inventory page to see updated stock levels.`
+          `Invoice Number: ${invoiceNumber}\n\n` +
+          `Inventory Updated:\n${itemsSummary}\n\n` +
+          `Please check the Inventory page to see updated stock levels.`
       );
     } else {
       alert(result.error || "Failed to create invoice");

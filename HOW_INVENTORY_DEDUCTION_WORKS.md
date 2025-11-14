@@ -9,11 +9,13 @@ Your system is now **fully configured** to automatically remove products from in
 ## 🎯 How It Works (Step-by-Step)
 
 ### **1. User Creates an Invoice**
+
 ```
 User navigates to: Invoices → Create Invoice
 ```
 
 ### **2. User Selects Products from Dropdown**
+
 ```
 Dropdown shows: "HP Laptop - ₹45,000 (Stock: 50)"
 User selects: HP Laptop
@@ -21,6 +23,7 @@ User enters quantity: 5
 ```
 
 ### **3. System Validates Stock (Before Creating Invoice)**
+
 ```
 ✓ Check if product_id is selected
 ✓ Check if quantity ≤ available stock
@@ -29,12 +32,14 @@ User enters quantity: 5
 ```
 
 ### **4. Invoice is Created**
+
 ```
 ✓ Invoice record created in database
 ✓ Invoice items saved with product_id link
 ```
 
 ### **5. Inventory is AUTOMATICALLY Updated**
+
 ```
 🔄 System fetches current stock: 50 units
 🔄 Calculates new stock: 50 - 5 = 45 units
@@ -43,6 +48,7 @@ User enters quantity: 5
 ```
 
 ### **6. User Gets Confirmation**
+
 ```
 ✅ Success message shows:
    - Invoice created
@@ -117,6 +123,7 @@ User enters quantity: 5
 ### **Test 1: Normal Product Sale (Should Work)**
 
 #### **Step 1: Check Current Inventory**
+
 1. Open your app
 2. Go to **Inventory** page
 3. Find any product (e.g., "HP Laptop")
@@ -124,6 +131,7 @@ User enters quantity: 5
 5. Take a screenshot or write it down
 
 #### **Step 2: Create Invoice**
+
 1. Go to **Invoices** page
 2. Click **"Create Invoice"** button
 3. Fill in customer details:
@@ -132,32 +140,37 @@ User enters quantity: 5
    - Due Date: (any future date)
 
 #### **Step 3: Select Product**
+
 1. In the "Product" dropdown, select **"HP Laptop"**
 2. ✅ Price should auto-fill
 3. ✅ Dropdown should show: `HP Laptop - ₹45,000 (Stock: 50)`
 4. Enter quantity: **5**
 
 #### **Step 4: Submit Invoice**
+
 1. Click **"Create Invoice"** button
 2. **Expected Message:**
+
    ```
    ✅ Invoice created successfully!
-   
+
    Invoice Number: INV-001
-   
+
    Inventory Updated:
    HP Laptop: 5 unit(s) sold
-   
+
    Please check the Inventory page to see updated stock levels.
    ```
 
 #### **Step 5: Verify Inventory Updated**
+
 1. Go to **Inventory** page
 2. Find "HP Laptop"
 3. **✅ EXPECTED RESULT: Should show 45 units** (was 50, sold 5)
 4. If you see 45 units → **SUCCESS! ✅ System is working!**
 
 #### **Step 6: Check Console (Optional)**
+
 1. Press F12 to open browser console
 2. You should see logs like:
    ```
@@ -174,11 +187,12 @@ User enters quantity: 5
 ### **Test 2: Insufficient Stock (Should Show Error)**
 
 #### **Steps:**
+
 1. Find a product with low stock (e.g., 3 units)
 2. Try to create invoice with quantity: 10
 3. **Expected:** Error message appears immediately
    ```
-   ❌ Insufficient stock for [Product Name]. 
+   ❌ Insufficient stock for [Product Name].
    Available: 3, Requested: 10
    ```
 4. **Expected:** Invoice is NOT created
@@ -189,7 +203,9 @@ User enters quantity: 5
 ### **Test 3: Multiple Products in One Invoice**
 
 #### **Steps:**
+
 1. Create invoice with 3 different products:
+
    - HP Laptop: 2 units (stock: 50)
    - HP Printer: 3 units (stock: 30)
    - HP Monitor: 1 unit (stock: 20)
@@ -197,11 +213,12 @@ User enters quantity: 5
 2. Submit invoice
 
 3. **Expected Success Message:**
+
    ```
    ✅ Invoice created successfully!
-   
+
    Invoice Number: INV-002
-   
+
    Inventory Updated:
    HP Laptop: 2 unit(s) sold
    HP Printer: 3 unit(s) sold
@@ -256,6 +273,7 @@ handleSubmit() {
 ## 🎨 UI Features
 
 ### **Product Dropdown Shows:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Select a product                                ▼   │
@@ -268,6 +286,7 @@ handleSubmit() {
 ```
 
 ### **Quantity Input Shows:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Quantity *                                          │
@@ -276,6 +295,7 @@ handleSubmit() {
 ```
 
 ### **Success Message Shows:**
+
 ```
 ╔═════════════════════════════════════════════════════╗
 ║  ✅ Invoice created successfully!                   ║
@@ -295,22 +315,23 @@ handleSubmit() {
 
 ## 🛡️ Safety Features Implemented
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| **Validation** | ✅ | Checks stock before submission |
-| **Prevent Overselling** | ✅ | Cannot sell more than available |
-| **Atomic Operations** | ✅ | All updates happen together or not at all |
-| **Error Handling** | ✅ | Clear error messages shown to user |
-| **Activity Logging** | ✅ | Every change is logged for audit |
-| **Real-time Stock Display** | ✅ | Dropdown shows current stock |
-| **Auto-price Filling** | ✅ | Price fills automatically |
-| **Console Logging** | ✅ | Debug logs for troubleshooting |
+| Feature                     | Status | Description                               |
+| --------------------------- | ------ | ----------------------------------------- |
+| **Validation**              | ✅     | Checks stock before submission            |
+| **Prevent Overselling**     | ✅     | Cannot sell more than available           |
+| **Atomic Operations**       | ✅     | All updates happen together or not at all |
+| **Error Handling**          | ✅     | Clear error messages shown to user        |
+| **Activity Logging**        | ✅     | Every change is logged for audit          |
+| **Real-time Stock Display** | ✅     | Dropdown shows current stock              |
+| **Auto-price Filling**      | ✅     | Price fills automatically                 |
+| **Console Logging**         | ✅     | Debug logs for troubleshooting            |
 
 ---
 
 ## 📝 Database Structure
 
 ### **Invoice Items Table:**
+
 ```sql
 invoice_items
 ├── id (UUID)
@@ -323,6 +344,7 @@ invoice_items
 ```
 
 ### **Products Table:**
+
 ```sql
 products
 ├── id (UUID)
@@ -357,6 +379,7 @@ After testing, verify:
 ### **Issue: Inventory NOT Updating**
 
 **Check 1: Browser Console**
+
 ```
 Press F12 → Console tab
 Look for: "✓ Successfully updated [Product] inventory to [Number]"
@@ -364,12 +387,14 @@ If missing: Share console output with me
 ```
 
 **Check 2: Product ID in Data**
+
 ```
 Look in console for: "product_id": "some-uuid-here"
 If shows undefined: Product wasn't selected properly
 ```
 
 **Check 3: Database Permissions**
+
 ```
 Make sure your Supabase RLS policies allow:
 - SELECT on products table
@@ -377,6 +402,7 @@ Make sure your Supabase RLS policies allow:
 ```
 
 **Check 4: Migration Applied**
+
 ```
 Verify in Supabase Dashboard:
 Database → Tables → invoice_items → Check if "product_id" column exists
@@ -388,14 +414,14 @@ Database → Tables → invoice_items → Check if "product_id" column exists
 
 ### **Scenario: Sell 5 HP Laptops**
 
-| Checkpoint | Expected | How to Verify |
-|------------|----------|---------------|
-| Before Sale | HP Laptop: 50 units | Check Inventory page |
-| Product Selection | Dropdown shows "Stock: 50" | Look at dropdown |
-| After Submit | Success message with details | See alert popup |
-| After Sale | HP Laptop: 45 units | Check Inventory page |
-| Console Logs | Shows update from 50 to 45 | Press F12 |
-| Activity Log | "Sold 5 units of HP Laptop" | Activity Log page |
+| Checkpoint        | Expected                     | How to Verify        |
+| ----------------- | ---------------------------- | -------------------- |
+| Before Sale       | HP Laptop: 50 units          | Check Inventory page |
+| Product Selection | Dropdown shows "Stock: 50"   | Look at dropdown     |
+| After Submit      | Success message with details | See alert popup      |
+| After Sale        | HP Laptop: 45 units          | Check Inventory page |
+| Console Logs      | Shows update from 50 to 45   | Press F12            |
+| Activity Log      | "Sold 5 units of HP Laptop"  | Activity Log page    |
 
 ---
 
@@ -404,6 +430,7 @@ Database → Tables → invoice_items → Check if "product_id" column exists
 If inventory is still not updating after testing:
 
 **Provide me with:**
+
 1. ✅ Screenshot of console output
 2. ✅ Before and After inventory quantities
 3. ✅ Success/Error message shown
@@ -414,6 +441,7 @@ If inventory is still not updating after testing:
 ## 🎉 Success Indicators
 
 **✅ You'll know it's working when:**
+
 1. You create an invoice with 5 units of a product
 2. You see success message with inventory update details
 3. You go to Inventory page
