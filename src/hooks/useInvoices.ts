@@ -80,6 +80,7 @@ export const useInvoices = () => {
         invoiceData.items
           .filter((item) => item.product_id)
           .map(async (item) => {
+            console.log("Checking inventory for product_id:", item.product_id);
             const { data: product, error } = await supabase
               .from("products")
               .select("quantity, name")
@@ -95,12 +96,21 @@ export const useInvoices = () => {
               );
             }
 
+            console.log(
+              `✓ Stock check passed for ${product.name}: Available=${product.quantity}, Requested=${item.quantity}`
+            );
+
             return {
               product_id: item.product_id,
               quantity: item.quantity,
               name: product.name,
             };
           })
+      );
+
+      console.log(
+        "All inventory checks passed. Items to update:",
+        inventoryChecks
       );
 
       // Insert invoice
@@ -143,6 +153,7 @@ export const useInvoices = () => {
       }
 
       // Update inventory quantities for items with product_id
+      console.log("Starting inventory updates...");
       for (const check of inventoryChecks) {
         const { data: product } = await supabase
           .from("products")
@@ -151,12 +162,24 @@ export const useInvoices = () => {
           .single();
 
         if (product) {
+          const newQuantity = product.quantity - check.quantity;
+          console.log(
+            `Updating ${check.name}: ${product.quantity} - ${check.quantity} = ${newQuantity}`
+          );
+
           const { error: updateError } = await supabase
             .from("products")
-            .update({ quantity: product.quantity - check.quantity })
+            .update({ quantity: newQuantity })
             .eq("id", check.product_id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error("Error updating inventory:", updateError);
+            throw updateError;
+          }
+
+          console.log(
+            `✓ Successfully updated ${check.name} inventory to ${newQuantity}`
+          );
 
           // Log inventory update
           await supabase.from("activity_logs").insert({
@@ -166,6 +189,8 @@ export const useInvoices = () => {
           });
         }
       }
+
+      console.log("✓ All inventory updates completed successfully");
 
       // Log activity
       await supabase.from("activity_logs").insert({

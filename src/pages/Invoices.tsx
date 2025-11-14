@@ -128,6 +128,26 @@ const Invoices: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate that all items have a product selected
+    const itemsWithoutProduct = formData.items.filter(
+      (item) => !item.product_id
+    );
+    if (itemsWithoutProduct.length > 0) {
+      alert("Please select a product for all items");
+      return;
+    }
+
+    // Validate stock availability
+    for (const item of formData.items) {
+      const product = products.find((p) => p.id === item.product_id);
+      if (product && product.quantity < item.quantity) {
+        alert(
+          `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`
+        );
+        return;
+      }
+    }
+
     const invoiceNumber = await generateInvoiceNumber();
     const { subtotal, tax_amount, total_amount } = calculateTotals();
 
@@ -148,12 +168,15 @@ const Invoices: React.FC = () => {
       payment_method: formData.payment_method || undefined,
       notes: formData.notes || undefined,
       items: formData.items.map((item) => ({
+        product_id: item.product_id || undefined, // CRITICAL: Include product_id for inventory tracking
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total: item.quantity * item.unit_price,
       })),
     };
+
+    console.log("Creating invoice with data:", invoiceData);
 
     const result = await addInvoice(invoiceData);
     if (result.success) {
@@ -172,7 +195,7 @@ const Invoices: React.FC = () => {
           { product_id: "", description: "", quantity: 1, unit_price: 0 },
         ],
       });
-      alert("Invoice created successfully!");
+      alert("Invoice created successfully! Inventory has been updated.");
     } else {
       alert(result.error || "Failed to create invoice");
     }
