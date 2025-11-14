@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { Invoice } from '../types';
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
+import { Invoice } from "../types";
 
 export const useInvoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -10,31 +10,33 @@ export const useInvoices = () => {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      
+
       // First, fetch all invoices
       const { data: invoicesData, error: invoicesError } = await supabase
-        .from('invoices')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("invoices")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (invoicesError) throw invoicesError;
 
       // Then, fetch all invoice items
       const { data: itemsData, error: itemsError } = await supabase
-        .from('invoice_items')
-        .select('*');
+        .from("invoice_items")
+        .select("*");
 
       if (itemsError) throw itemsError;
 
       // Manually combine the data
-      const invoicesWithItems = (invoicesData || []).map(invoice => ({
+      const invoicesWithItems = (invoicesData || []).map((invoice) => ({
         ...invoice,
-        items: (itemsData || []).filter(item => item.invoice_id === invoice.id)
+        items: (itemsData || []).filter(
+          (item) => item.invoice_id === invoice.id
+        ),
       }));
 
       setInvoices(invoicesWithItems);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -42,34 +44,68 @@ export const useInvoices = () => {
 
   const generateInvoiceNumber = async () => {
     const { data, error } = await supabase
-      .from('invoices')
-      .select('invoice_number')
-      .order('created_at', { ascending: false })
+      .from("invoices")
+      .select("invoice_number")
+      .order("created_at", { ascending: false })
       .limit(1);
 
     if (error) {
-      console.error('Error fetching last invoice:', error);
-      return 'INV-001';
+      console.error("Error fetching last invoice:", error);
+      return "INV-001";
     }
 
     if (!data || data.length === 0) {
-      return 'INV-001';
+      return "INV-001";
     }
 
     const lastNumber = data[0].invoice_number;
-    const numberPart = parseInt(lastNumber.split('-')[1]) || 0;
+    const numberPart = parseInt(lastNumber.split("-")[1]) || 0;
     const newNumber = numberPart + 1;
-    return `INV-${newNumber.toString().padStart(3, '0')}`;
+    return `INV-${newNumber.toString().padStart(3, "0")}`;
   };
 
-  const addInvoice = async (invoiceData: Omit<Invoice, 'id' | 'created_at' | 'items'> & { items: Omit<Invoice['items'][0], 'id' | 'invoice_id'>[] }) => {
+  const addInvoice = async (
+    invoiceData: Omit<Invoice, "id" | "created_at" | "items"> & {
+      items: Omit<Invoice["items"][0], "id" | "invoice_id">[];
+    }
+  ) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      // First, check inventory availability for all items with product_id
+      const inventoryChecks = await Promise.all(
+        invoiceData.items
+          .filter((item) => item.product_id)
+          .map(async (item) => {
+            const { data: product, error } = await supabase
+              .from("products")
+              .select("quantity, name")
+              .eq("id", item.product_id)
+              .single();
+
+            if (error) throw error;
+            if (!product) throw new Error(`Product not found`);
+
+            if (product.quantity < item.quantity) {
+              throw new Error(
+                `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`
+              );
+            }
+
+            return {
+              product_id: item.product_id,
+              quantity: item.quantity,
+              name: product.name,
+            };
+          })
+      );
 
       // Insert invoice
       const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
+        .from("invoices")
         .insert({
           invoice_number: invoiceData.invoice_number,
           customer_name: invoiceData.customer_name,
@@ -94,59 +130,91 @@ export const useInvoices = () => {
 
       // Insert invoice items
       if (invoiceData.items.length > 0) {
-        const invoiceItems = invoiceData.items.map(item => ({
+        const invoiceItems = invoiceData.items.map((item) => ({
           ...item,
           invoice_id: invoice.id,
         }));
 
         const { error: itemsError } = await supabase
-          .from('invoice_items')
+          .from("invoice_items")
           .insert(invoiceItems);
 
         if (itemsError) throw itemsError;
       }
-      
+
+      // Update inventory quantities for items with product_id
+      for (const check of inventoryChecks) {
+        const { data: product } = await supabase
+          .from("products")
+          .select("quantity")
+          .eq("id", check.product_id)
+          .single();
+
+        if (product) {
+          const { error: updateError } = await supabase
+            .from("products")
+            .update({ quantity: product.quantity - check.quantity })
+            .eq("id", check.product_id);
+
+          if (updateError) throw updateError;
+
+          // Log inventory update
+          await supabase.from("activity_logs").insert({
+            user_id: user.id,
+            action: "Update Inventory",
+            details: `Sold ${check.quantity} units of ${check.name} via invoice ${invoiceData.invoice_number}`,
+          });
+        }
+      }
+
       // Log activity
-      await supabase
-        .from('activity_logs')
-        .insert({
-          user_id: user.id,
-          action: 'Create Invoice',
-          details: `Created invoice ${invoiceData.invoice_number} for ${invoiceData.customer_name}`,
-        });
+      await supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "Create Invoice",
+        details: `Created invoice ${invoiceData.invoice_number} for ${invoiceData.customer_name}`,
+      });
 
       await fetchInvoices();
       return { success: true, invoice };
     } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : 'Failed to create invoice' };
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to create invoice",
+      };
     }
   };
 
-  const updateInvoiceStatus = async (id: string, status: Invoice['status']) => {
+  const updateInvoiceStatus = async (id: string, status: Invoice["status"]) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
       const { error } = await supabase
-        .from('invoices')
+        .from("invoices")
         .update({ status })
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
-      
+
       // Log activity
-      await supabase
-        .from('activity_logs')
-        .insert({
-          user_id: user.id,
-          action: 'Update Invoice Status',
-          details: `Updated invoice status to ${status}`,
-        });
+      await supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "Update Invoice Status",
+        details: `Updated invoice status to ${status}`,
+      });
 
       await fetchInvoices();
       return { success: true };
     } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : 'Failed to update invoice status' };
+      return {
+        success: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to update invoice status",
+      };
     }
   };
 

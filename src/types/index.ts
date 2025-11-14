@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   full_name: string;
-  role: 'admin' | 'employee';
+  role: "admin" | "employee";
   store_id?: string;
   created_at: string;
 }
@@ -20,7 +20,7 @@ export interface Attendance {
   date: string;
   check_in: string;
   check_out?: string;
-  status: 'present' | 'absent' | 'late';
+  status: "present" | "absent" | "late";
   created_at: string;
   user?: User;
 }
@@ -32,8 +32,8 @@ export interface Task {
   assigned_to: string;
   assigned_by: string;
   deadline: string;
-  status: 'not_started' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
+  status: "not_started" | "in_progress" | "completed";
+  priority: "low" | "medium" | "high";
   created_at: string;
   assignee?: User;
   assigner?: User;
@@ -56,7 +56,7 @@ export interface Order {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
-  status: 'pending' | 'processing' | 'dispatched' | 'delivered';
+  status: "pending" | "processing" | "dispatched" | "delivered";
   total_amount: number;
   items: OrderItem[];
   created_at: string;
@@ -119,7 +119,7 @@ export interface Invoice {
   tax_rate: number;
   tax_amount: number;
   total_amount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  status: "draft" | "sent" | "paid" | "overdue";
   payment_method?: string;
   notes?: string;
   items: InvoiceItem[];
@@ -129,6 +129,7 @@ export interface Invoice {
 export interface InvoiceItem {
   id: string;
   invoice_id: string;
+  product_id?: string;
   description: string;
   quantity: number;
   unit_price: number;
