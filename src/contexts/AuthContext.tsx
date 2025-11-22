@@ -13,6 +13,12 @@ interface AuthContextType {
   requiresOTP: boolean;
   pendingEmail: string | null;
   signIn: (email: string, password: string) => Promise<AuthResponse>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    role: string
+  ) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   sendOTP: (email: string) => Promise<AuthResponse>;
   verifyOTP: (email: string, token: string) => Promise<AuthResponse>;
@@ -95,6 +101,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     return { data, error };
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: string
+  ): Promise<AuthResponse> => {
+    try {
+      // Step 1: Sign up the user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-email`,
+        },
+      });
+
+      if (authError) {
+        return { data: null, error: authError };
+      }
+
+      if (!authData.user) {
+        return { data: null, error: { message: "Failed to create user" } };
+      }
+
+      // Step 2: Create user profile in users table
+      const { error: profileError } = await supabase.from("users").insert({
+        id: authData.user.id,
+        email: email,
+        full_name: fullName,
+        role: role === "administrator" ? "admin" : "employee",
+      });
+
+      if (profileError) {
+        console.error("Error creating user profile:", profileError);
+        // Don't fail the signup if profile creation fails
+        // The user can still login, and profile will be created later
+      }
+
+      // Step 3: Set pending email for OTP verification
+      setPendingEmail(email);
+      setRequiresOTP(true);
+
+      return {
+        data: authData,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error:
+          error instanceof Error
+            ? error
+            : { message: "An error occurred during sign up" },
+      };
+    }
   };
 
   const signOut = async () => {
@@ -212,6 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     requiresOTP,
     pendingEmail,
     signIn,
+    signUp,
     signOut,
     sendOTP,
     verifyOTP,

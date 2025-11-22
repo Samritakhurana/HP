@@ -13,7 +13,7 @@ export default function LoginForm() {
   const [message, setMessage] = useState("");
   const [useOTPLogin, setUseOTPLogin] = useState(false);
 
-  const { signIn, sendOTP, requiresOTP, pendingEmail } = useAuth();
+  const { signIn, signUp, sendOTP, requiresOTP, pendingEmail } = useAuth();
 
   // If OTP verification is required, show the OTP component
   if (requiresOTP && pendingEmail) {
@@ -26,7 +26,10 @@ export default function LoginForm() {
 
     try {
       if (isSignUp) {
-        setMessage("Sign up functionality - to be implemented");
+        await signUp(email, password, name, role);
+        setMessage(
+          "Account created! Please check your email to verify your account."
+        );
       } else {
         if (useOTPLogin) {
           await sendOTP(email);
