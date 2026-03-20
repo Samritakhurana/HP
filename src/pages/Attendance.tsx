@@ -30,10 +30,15 @@ const Attendance: React.FC = () => {
     return recordDate === today;
   });
 
-  const presentToday = todayAttendance.filter(record => record.status === 'present' || record.status === 'late').length;
-  const absentToday = todayAttendance.filter(record => record.status === 'absent').length;
   const lateToday = todayAttendance.filter(record => record.status === 'late').length;
+  const presentOnlyToday = todayAttendance.filter(record => record.status === 'present').length;
+  const explicitAbsentToday = todayAttendance.filter(record => record.status === 'absent').length;
   const totalEmployees = employees.length;
+  const markedTodayCount = todayAttendance.length;
+  const unmarkedTodayCount = Math.max(0, totalEmployees - markedTodayCount);
+
+  const presentToday = presentOnlyToday + lateToday;
+  const absentToday = explicitAbsentToday + unmarkedTodayCount;
 
   // Export functionality
   const exportToCSV = () => {
@@ -96,6 +101,7 @@ const Attendance: React.FC = () => {
   };
 
   const handleMarkAttendance = async () => {
+    if (hasMarkedToday) return;
     const result = await markAttendance();
     if (result.success) {
       alert('Attendance marked successfully!');
@@ -142,9 +148,10 @@ const Attendance: React.FC = () => {
         </div>
         <button
           onClick={handleMarkAttendance}
-          className="mt-4 sm:mt-0 bg-hp-blue hover:bg-hp-dark-blue text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+          disabled={hasMarkedToday}
+          className={`mt-4 sm:mt-0 px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${hasMarkedToday ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-hp-blue hover:bg-hp-dark-blue text-white'}`}
         >
-          Mark Attendance
+          {hasMarkedToday ? 'Attendance Already Marked' : 'Mark Attendance'}
         </button>
       </div>
 
@@ -159,7 +166,7 @@ const Attendance: React.FC = () => {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -169,7 +176,7 @@ const Attendance: React.FC = () => {
             <AlertCircle className="w-8 h-8 text-red-600" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -179,7 +186,7 @@ const Attendance: React.FC = () => {
             <Clock className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -224,7 +231,7 @@ const Attendance: React.FC = () => {
               </select>
             </div>
           </div>
-          <button 
+          <button
             onClick={exportToCSV}
             className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
           >

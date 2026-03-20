@@ -16,6 +16,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { isDark, toggleTheme } = useTheme();
   const { unreadCount } = useNotifications();
 
+  const handleSignOut = async () => {
+    const confirmed = window.confirm('Are you sure you want to log out?');
+    if (!confirmed) return;
+
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Failed to sign out:', error);
+    }
+  };
+
   return (
     <header className="flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
@@ -68,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             </div>
             
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <LogOut className="w-5 h-5" />

@@ -20,7 +20,7 @@ export const useAttendance = () => {
       }
 
       const currentOffset = isLoadMore ? offset : 0;
-      
+
       const { data, error } = await supabase
         .from('attendance')
         .select(`
@@ -31,13 +31,13 @@ export const useAttendance = () => {
         .range(currentOffset, currentOffset + limit - 1);
 
       if (error) throw error;
-      
+
       if (isLoadMore) {
         setAttendance(prev => [...prev, ...(data || [])]);
       } else {
         setAttendance(data || []);
       }
-      
+
       setHasMore((data || []).length === limit);
       setOffset(currentOffset + (data || []).length);
     } catch (err) {
@@ -62,10 +62,11 @@ export const useAttendance = () => {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const checkInTime = now.toISOString();
-      
-      // Determine status based on time (9 AM = late)
+
+      // Determine status based on time
       const hour = now.getHours();
-      const status = hour >= 9 && now.getMinutes() > 15 ? 'late' : 'present';
+      const minutes = now.getMinutes();
+      const status = (hour > 9 || (hour === 9 && minutes > 15)) ? 'late' : 'present';
 
       const { error } = await supabase
         .from('attendance')
@@ -79,7 +80,7 @@ export const useAttendance = () => {
         });
 
       if (error) throw error;
-      
+
       // Log activity
       await supabase
         .from('activity_logs')
@@ -111,7 +112,7 @@ export const useAttendance = () => {
         .eq('date', today);
 
       if (error) throw error;
-      
+
       // Log activity
       await supabase
         .from('activity_logs')
