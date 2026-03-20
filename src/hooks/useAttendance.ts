@@ -54,47 +54,58 @@ export const useAttendance = () => {
     }
   };
 
-  const markAttendance = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+const markAttendance = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
-      const now = new Date();
-      const today = now.toISOString().split('T')[0];
-      const checkInTime = now.toISOString();
-      
-      // Determine status based on time (9 AM = late)
-      const hour = now.getHours();
-      const status = hour >= 9 && now.getMinutes() > 15 ? 'late' : 'present';
+    const now = new Date();
 
-      const { error } = await supabase
-        .from('attendance')
-        .upsert({
-          user_id: user.id,
-          date: today,
-          check_in: checkInTime,
-          status,
-        }, {
-          onConflict: 'user_id,date'
-        });
+    // ✅ Force IST time
+    const istNow = new Date(
+      now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+    );
 
-      if (error) throw error;
-      
-      // Log activity
-      await supabase
-        .from('activity_logs')
-        .insert({
-          user_id: user.id,
-          action: 'Mark Attendance',
-          details: `Marked attendance as ${status} at ${now.toLocaleTimeString()}`,
-        });
+    // ✅ Local date in IST
+    const today = istNow.toISOString().split('T')[0];
 
-      await fetchAttendance();
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : 'Failed to mark attendance' };
-    }
-  };
+    const checkInTime = now.toISOString(); // keep UTC for DB consistency
+
+    // ✅ Set cutoff in IST
+    const cutoff = new Date(istNow);
+    cutoff.setHours(9, 15, 0, 0);
+
+    const status = istNow > cutoff ? 'late' : 'present';
+
+    const { error } = await supabase
+      .from('attendance')
+      .upsert({
+        user_id: user.id,
+        date: today,
+        check_in: checkInTime,
+        status,
+      }, {
+        onConflict: 'user_id,date'
+      });
+
+    if (error) throw error;
+
+    await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      action: 'Mark Attendance',
+      details: `Marked attendance as ${status} at ${istNow.toLocaleTimeString()}`,
+    });
+
+    await fetchAttendance();
+    return { success: true };
+
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to mark attendance'
+    };
+  }
+};
 
   const checkOut = async () => {
     try {
