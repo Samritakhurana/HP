@@ -5,114 +5,91 @@ import { Attendance } from '../types';
 export const useAttendance = () => {
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
 
-  const fetchAttendance = async (isLoadMore = false, limit = 50) => {
+  const fetchAttendance = async () => {
     try {
-      if (isLoadMore) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setOffset(0);
-      }
+      setLoading(true);
 
-      const currentOffset = isLoadMore ? offset : 0;
-      
       const { data, error } = await supabase
         .from('attendance')
         .select(`
           *,
           user:users(*)
         `)
-        .order('date', { ascending: false })
-        .range(currentOffset, currentOffset + limit - 1);
+        .order('date', { ascending: false });
 
       if (error) throw error;
-      
-      if (isLoadMore) {
-        setAttendance(prev => [...prev, ...(data || [])]);
-      } else {
-        setAttendance(data || []);
-      }
-      
-      setHasMore((data || []).length === limit);
-      setOffset(currentOffset + (data || []).length);
+
+      setAttendance(data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
-  const loadMore = () => {
-    if (!loadingMore && hasMore) {
-      fetchAttendance(true);
-    }
-  };
+  const markAttendance = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-  
-const markAttendance = async () => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+      const now = new Date();
 
-    const now = new Date();
+      // ✅ Use local date (IST safe)
+      const today = now.toLocaleDateString('en-CA');
 
-    // ✅ Use local date instead of UTC
-    const today = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const checkInTime = now.toISOString();
 
-    const checkInTime = now.toISOString();
+      // ✅ Proper late logic (after 9:15 AM)
+      const cutoff = new Date();
+      cutoff.setHours(9, 15, 0, 0);
 
-    // ✅ Proper late logic (after 9:15 AM)
-    const cutoff = new Date();
-    cutoff.setHours(9, 15, 0, 0);
+      const status = now > cutoff ? 'late' : 'present';
 
-    const status = now > cutoff ? 'late' : 'present';
+      const { error } = await supabase
+        .from('attendance')
+        .upsert(
+          {
+            user_id: user.id,
+            date: today,
+            check_in: checkInTime,
+            status,
+          },
+          {
+            onConflict: 'user_id,date',
+          }
+        );
 
-    const { error } = await supabase
-      .from('attendance')
-      .upsert({
-        user_id: user.id,
-        date: today,
-        check_in: checkInTime,
-        status,
-      }, {
-        onConflict: 'user_id,date'
-      });
+      if (error) throw error;
 
-    if (error) throw error;
-
-    // Log activity
-    await supabase
-      .from('activity_logs')
-      .insert({
+      // ✅ Fixed template string
+      await supabase.from('activity_logs').insert({
         user_id: user.id,
         action: 'Mark Attendance',
         details: `Marked attendance as ${status} at ${now.toLocaleTimeString()}`,
       });
 
-    await fetchAttendance();
-    return { success: true };
+      await fetchAttendance();
 
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : 'Failed to mark attendance'
-    };
-  }
-};
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to mark attendance',
+      };
+    }
+  };
 
-  
   const checkOut = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const checkOutTime = new Date().toISOString();
 
       const { error } = await supabase
@@ -122,20 +99,25 @@ const markAttendance = async () => {
         .eq('date', today);
 
       if (error) throw error;
-      
-      // Log activity
-      await supabase
-        .from('activity_logs')
-        .insert({
-          user_id: user.id,
-          action: 'Check Out',
-          details: `Checked out at ${new Date().toLocaleTimeString()}`,
-        });
+
+      // ✅ Fixed template string
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        action: 'Check Out',
+        details: `Checked out at ${new Date().toLocaleTimeString()}`,
+      });
 
       await fetchAttendance();
+
       return { success: true };
     } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : 'Failed to check out' };
+      return {
+        success: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to check out',
+      };
     }
   };
 
@@ -146,12 +128,9 @@ const markAttendance = async () => {
   return {
     attendance,
     loading,
-    loadingMore,
     error,
-    hasMore,
-    loadMore,
     markAttendance,
     checkOut,
-    refetch: () => fetchAttendance(false),
+    refetch: fetchAttendance,
   };
 };
