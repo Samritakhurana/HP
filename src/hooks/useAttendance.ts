@@ -54,6 +54,7 @@ export const useAttendance = () => {
     }
   };
 
+  
 const markAttendance = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -61,21 +62,16 @@ const markAttendance = async () => {
 
     const now = new Date();
 
-    // ✅ Force IST time
-    const istNow = new Date(
-      now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
-    );
+    // ✅ Use local date instead of UTC
+    const today = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
 
-    // ✅ Local date in IST
-    const today = istNow.toISOString().split('T')[0];
+    const checkInTime = now.toISOString();
 
-    const checkInTime = now.toISOString(); // keep UTC for DB consistency
-
-    // ✅ Set cutoff in IST
-    const cutoff = new Date(istNow);
+    // ✅ Proper late logic (after 9:15 AM)
+    const cutoff = new Date();
     cutoff.setHours(9, 15, 0, 0);
 
-    const status = istNow > cutoff ? 'late' : 'present';
+    const status = now > cutoff ? 'late' : 'present';
 
     const { error } = await supabase
       .from('attendance')
@@ -90,11 +86,14 @@ const markAttendance = async () => {
 
     if (error) throw error;
 
-    await supabase.from('activity_logs').insert({
-      user_id: user.id,
-      action: 'Mark Attendance',
-      details: `Marked attendance as ${status} at ${istNow.toLocaleTimeString()}`,
-    });
+    // Log activity
+    await supabase
+      .from('activity_logs')
+      .insert({
+        user_id: user.id,
+        action: 'Mark Attendance',
+        details: `Marked attendance as ${status} at ${now.toLocaleTimeString()}`,
+      });
 
     await fetchAttendance();
     return { success: true };
@@ -107,6 +106,7 @@ const markAttendance = async () => {
   }
 };
 
+  
   const checkOut = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
